@@ -1,8 +1,8 @@
 class PartialBlock
 
-  def initialize(input_array,&block)
+  def initialize(input_array,&input_block)
     @array = input_array
-    @block = block
+    @block = input_block
   end
 
   def matches(*args)
@@ -14,7 +14,7 @@ class PartialBlock
   end
 
   def call(*args)
-    raise 'Ha ocurrido un error' unless matches(*args)
+    raise 'PAPI, LOS PARAMETROS NO MATCHEAN' unless matches(*args)
     @block.call(*args)
   end
 

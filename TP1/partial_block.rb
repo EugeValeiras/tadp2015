@@ -7,14 +7,14 @@ class PartialBlock
 
   def matches(*args)
     return false unless args.count == @array.count
-    @array.each do |type, index|
-      return false unless @array.get(index).is_a?(type)
+    @array.each_with_index do |type, index|
+      return false unless args[index].is_a?(type)
     end
     true
   end
 
   def call(*args)
-    raise Error unless matches(*args)
+    raise 'Ha ocurrido un error' unless matches(*args)
     @block.call(*args)
   end
 

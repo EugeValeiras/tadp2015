@@ -14,7 +14,8 @@ class PartialBlock
   end
 
   def call(*args)
-    raise 'PAPI, LOS PARAMETROS NO MATCHEAN' unless matches(*args)
+    raise ArgumentError.new unless matches(*args)
+    #--raise 'PAPI, LOS PARAMETROS NO MATCHEAN' unless matches(*args)
     @block.call(*args)
   end
 

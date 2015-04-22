@@ -1,13 +1,13 @@
 require 'rspec'
 require_relative '../src/partial_block'
 
-describe 'Implementación partial_block' do
+describe 'Implementacion partial_block' do
 
   helloBlock = PartialBlock.new([String]) do |who|
     "Hello #{who}"
   end
 
-  it 'Matchean los parámetros?' do
+  it 'Matchean los parametros?' do
     expect(helloBlock.matches("a")).to be true
     expect(helloBlock.matches(1)).to be false
     expect(helloBlock.matches("a","b")).to be false
@@ -17,7 +17,7 @@ describe 'Implementación partial_block' do
     expect(helloBlock.call("world!")).to eq('Hello world!')
   end
 
-  it 'Debería dar error' do
+  it 'Deberia dar error' do
     expect{ helloBlock.call(1) }.to raise_error(ArgumentError)
   end
 

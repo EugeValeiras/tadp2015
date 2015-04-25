@@ -20,6 +20,10 @@ class MultiMethod
     @partial_blocks.any? { |pb| pb.matches(*args) }
   end
 
+  def matches_classes(*args)
+    @partial_blocks.any? { |pb| pb.matches_classes(*args) }
+  end
+
   def block_for(*args)
     best_pb = @partial_blocks.select { |pb| pb.matches(*args) }
                              .sort_by { |pb| pb.afinity(*args) }
@@ -32,7 +36,6 @@ end
 
 class Object
 
-  # pasar esto a Class ?
   def self.add_multimethod(input_name, input_array, &input_block)
     input_name = input_name.to_sym
     mm = multimethod(input_name)
@@ -46,7 +49,6 @@ class Object
     @multimethods.push(MultiMethod.new(input_name, partial_block))
   end
 
-  # Pasar esto a Class ?
   def self.partial_def(input_name, input_array, &input_block)
     add_multimethod(input_name, input_array, &input_block)
     define_method(input_name) { |*args|
@@ -63,20 +65,21 @@ class Object
     }
   end
 
-  # def partial_def(input_name, input_array, &input_block)
-  #   self.singleton_class.partial_def(input_name, input_array, &input_block)
-  # end
-
-  # Pasar esto a Class ?
   def self.multimethods
     @multimethods ||= []
     @multimethods.map { |mm| mm.name }
   end
 
-  # Pasar esto a Class ?b
   def self.multimethod(name)
     @multimethods ||= []
     @multimethods.select { |mm| mm.name == name }.first
+  end
+
+  alias_method :old_respond_to?, :respond_to?
+  def respond_to?(method_name, private = false, types_array = nil)
+    return old_respond_to?(method_name, private) unless types_array
+    mm = self.class.multimethod(method_name)
+    mm ? mm.matches_classes(*types_array) : false
   end
 
 end

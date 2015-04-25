@@ -15,6 +15,14 @@ class PartialBlock
     true
   end
 
+  def matches_classes(*args)
+    return false unless args.count == types_array.count
+    types_array.each_with_index do |type, index|
+      return false unless args[index].ancestors.include?(type)
+    end
+    true
+  end
+
   def call(*args)
     raise ArgumentError.new unless matches(*args)
     @block.call(*args)

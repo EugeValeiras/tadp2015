@@ -14,6 +14,10 @@ class A
   partial_def :concat, [Array] do |a|
     a.join
   end
+
+  partial_def :concat, [Object, Object] do |o1, o2|
+    "Objetos concatenados"
+  end
 end
 
 class B
@@ -118,11 +122,6 @@ describe 'Multimethods en tanque, soldado y avion' do
       partial_def :ataca_a, [Avion] do |avion|
         self.atacar_con_satelite(avion)
       end
-
-      #Cambio la definición previa de cómo atacar a un soldado
-      partial_def :ataca_a, [Soldado] do |soldado|
-        self.pisar(soldado)
-      end
     end
 
     tanque = Tanque.new
@@ -132,11 +131,6 @@ describe 'Multimethods en tanque, soldado y avion' do
     it 'el tanque ataca al avion' do
       expect(tanque.ataca_a(avion)).to eq('PONELE')
     end
-
-    it 'el tanque ataca al soldado' do
-      expect(tanque.ataca_a(soldado)).to eq('para eso comprate un auto...')
-    end
-
   end
 
   context 'multimethods en instancias' do
@@ -156,4 +150,34 @@ describe 'Multimethods en tanque, soldado y avion' do
       expect { Tanque.new.tocar_bocina_a(Tanque.new) }.to raise_error(NoMethodError)
     end
   end
+end
+
+describe 'multimethods se pisan' do
+  class C
+    partial_def :saludar_a, [String] do |persona|
+      "hola #{persona}"
+    end
+  end
+
+  class C
+    partial_def :saludar_a, [String] do |persona|
+      "escuchame #{persona}"
+    end
+  end
+
+  it 'usa el ultimo multimethod definido' do
+    expect(C.new.saludar_a("fresco")).to eq("escuchame fresco")
+  end
+end
+
+describe 'respond_to?' do
+  it 'respond_to? encuentra concat' do
+    expect(A.new.respond_to?(:concat)).to be(true)
+    expect(A.new.respond_to?(:to_s)).to be(true)
+    expect(A.new.respond_to?(:concat, false, [String, String])).to be(true)
+    expect(A.new.respond_to?(:concat, false, [Integer, A])).to be(true)
+    expect(A.new.respond_to?(:to_s, false, [String])).to be(false)
+    expect(A.new.respond_to?(:concat, false, [String, String, String])).to be(false)
+  end
+
 end

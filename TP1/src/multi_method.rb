@@ -1,10 +1,11 @@
 require_relative 'partial_block'
+require 'byebug'
 
 class NoMultiMethodError < NoMethodError; end
 
 class MultiMethod
 
-  attr_reader :name
+  attr_reader :name, :partial_blocks
 
   def initialize(name, partial_block)
     @name = name
@@ -52,7 +53,7 @@ class Object
   def self.partial_def(input_name, input_array, &input_block)
     add_multimethod(input_name, input_array, &input_block)
     define_method(input_name) { |*args|
-      block = self.class.multimethod(input_name).block_for(*args)
+      block = block_for(input_name, *args)
       instance_exec(*args, &block)
     }
   end
@@ -80,6 +81,41 @@ class Object
     return old_respond_to?(method_name, private) unless types_array
     mm = self.class.multimethod(method_name)
     mm ? mm.matches_classes(*types_array) : false
+  end
+
+  private
+
+  def block_for(method_name, *args)
+    partial_blocks = []
+    current_class = self.class
+
+    while(!current_class.nil?)
+      begin
+        break if (current_class.instance_method(method_name).owner == current_class) && !current_class.multimethod(method_name)
+      rescue
+      end
+
+      current_class_multimethods = current_class.instance_variable_get('@multimethods') || []
+      current_multimethod = current_class_multimethods
+                                 .select { |mm| mm.name == method_name }
+                                 .first
+
+      unless current_multimethod.nil?
+        current_multimethod.partial_blocks.each do |pb|
+          unless partial_blocks.any? { |block| block.types_array == pb.types_array }
+            partial_blocks << pb
+          end
+        end
+      end
+
+      current_class = current_class.superclass
+    end
+
+    best_pb = partial_blocks.select { |pb| pb.matches(*args) }
+                             .sort_by { |pb| pb.afinity(*args) }
+                             .first
+    return best_pb.block if best_pb
+    raise NoMultiMethodError.new
   end
 
 end

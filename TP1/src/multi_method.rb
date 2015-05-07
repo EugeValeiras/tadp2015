@@ -99,7 +99,7 @@ class Object
       current_multimethod = current_class_multimethods
                                  .select { |mm| mm.name == method_name }
                                  .first
-
+#      puts "#{current_class}:#{current_multimethod}"
       unless current_multimethod.nil?
         current_multimethod.partial_blocks.each do |pb|
           unless partial_blocks.any? { |block| block.types_array == pb.types_array }
@@ -117,5 +117,16 @@ class Object
     return best_pb.block if best_pb
     raise NoMultiMethodError.new
   end
+
+  def base()
+    currentClass = self.class
+    def method_missing(m, *args)
+      block = currentClass.block_for(m, *args)
+      instance_exec(*args, &block)
+      end
+  end
+
+
+
 
 end

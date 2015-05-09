@@ -1,3 +1,5 @@
+require_relative '../src/multi_method.rb'
+
 class AEnunciado
   partial_def :m, [String] do |s|
       "A>m #{s}"

@@ -50,33 +50,64 @@ class Object
 
   def self.partial_def(input_name, input_array, &input_block)
     add_multimethod(input_name, input_array, &input_block)
+# TODO - ADD THIS LINE -DELETE THE REPETEAD BLOCK BELOW OF IT
+#    define_multimethod(input_name, self.class)
     define_method(input_name) { |*args|
-      #block = block_for(input_name, *args)
-      list_partialBlock = getParcialBlocks(input_name)
+      list_partialBlock = getParcialBlocks(input_name, self.class)
       block = getBestBlock(list_partialBlock, *args)
       instance_exec(*args, &block)
     }
   end
 
   def partial_def(input_name, input_array, &input_block)
-    #Agregar un multimedo a la singleton class
     self.singleton_class.add_multimethod(input_name, input_array, &input_block)
-    #Aca esta el multimetodo agregado: self.singleton_class.instance_variable_get("@multimethods")
+    define_multimethod(input_name, self.singleton_class)
+  end
+
+  def define_multimethod(input_name, current_class)
     define_singleton_method(input_name) { |*args|
-      #Decidir entre los metodos de la singleton class y los metodos de la clase cual es el que me conviene tomar.
-#      block = self.singleton_class.multimethod(input_name).block_for(*args)
-
-      list_class_partialBlock = getParcialBlocks(input_name)
-
-      singleton_list_multimethods = self.singleton_class.instance_variable_get("@multimethods")
-      singleton_multimethod = singleton_list_multimethods.find { |mm| mm.name == input_name }
-      singleton_partialBlock = singleton_multimethod.partial_blocks
-
-      list_partialBlock = filterPartialBlock(list_class_partialBlock, singleton_partialBlock)
-
+      list_partialBlock = getParcialBlocks(input_name, current_class)
       block = getBestBlock(list_partialBlock, *args)
       instance_exec(*args, &block)
     }
+  end
+
+  #Given a method_name and *args returns the available partial block for it.
+  def getParcialBlocks(method_name, current_class)
+    partial_blocks = []
+
+    while(current_class)
+      begin
+        break if (current_class.instance_method(method_name).owner == current_class) && !current_class.multimethod(method_name, false)
+      rescue
+      end
+
+      current_class_multimethods = current_class.instance_variable_get('@multimethods') || []
+      current_multimethod = current_class_multimethods.find { |mm| mm.name == method_name }
+
+      unless current_multimethod.nil?
+        current_multimethod.partial_blocks.each do |pb|
+          unless partial_blocks.any? { |block| block.types_array == pb.types_array }
+            partial_blocks << pb
+          end
+        end
+      end
+
+      current_class = current_class.superclass
+    end
+    return partial_blocks if partial_blocks
+
+    raise NoMultiMethodError.new
+  end
+
+  #Given a list of partialBlocks, obtain the best fit
+  def getBestBlock(partial_blocks, *args)
+    best_pb = partial_blocks.select { |pb| pb.matches(*args) }
+                  .sort_by { |pb| pb.afinity(*args) }
+                  .first
+    return best_pb.block if best_pb if best_pb
+
+    raise NoMultiMethodError.new
   end
 
   def filterPartialBlock(singleton_multimethod, class_partialBlocks)
@@ -130,79 +161,6 @@ class Object
     return old_respond_to?(method_name, private) unless types_array
     mm = self.class.multimethod(method_name, false)
     mm ? mm.matches_classes(*types_array) : false
-  end
-
-  private
-
-  #Given a method_name and *args returns the available partial block for it.
-  def getParcialBlocks(method_name)
-    partial_blocks = []
-    current_class = self.class
-
-    while(current_class)
-      begin
-        break if (current_class.instance_method(method_name).owner == current_class) && !current_class.multimethod(method_name, false)
-      rescue
-      end
-
-      current_class_multimethods = current_class.instance_variable_get('@multimethods') || []
-      current_multimethod = current_class_multimethods.find { |mm| mm.name == method_name }
-
-      unless current_multimethod.nil?
-        current_multimethod.partial_blocks.each do |pb|
-          unless partial_blocks.any? { |block| block.types_array == pb.types_array }
-            partial_blocks << pb
-          end
-        end
-      end
-
-      current_class = current_class.superclass
-    end
-    return partial_blocks if partial_blocks
-
-    raise NoMultiMethodError.new
-  end
-
-  #Given a list of partialBlocks, obtain the best fit
-  def getBestBlock(partial_blocks, *args)
-    best_pb = partial_blocks.select { |pb| pb.matches(*args) }
-                  .sort_by { |pb| pb.afinity(*args) }
-                  .first
-    return best_pb.block if best_pb if best_pb
-
-    raise NoMultiMethodError.new
-  end
-
-  # Returns the best possible block that matches the given arguments
-  def block_for(method_name, *args)
-    partial_blocks = []
-    current_class = self.class
-
-    while(current_class)
-      begin
-        break if (current_class.instance_method(method_name).owner == current_class) && !current_class.multimethod(method_name, false)
-      rescue
-      end
-
-      current_class_multimethods = current_class.instance_variable_get('@multimethods') || []
-      current_multimethod = current_class_multimethods.find { |mm| mm.name == method_name }
-
-      unless current_multimethod.nil?
-        current_multimethod.partial_blocks.each do |pb|
-          unless partial_blocks.any? { |block| block.types_array == pb.types_array }
-            partial_blocks << pb
-          end
-        end
-      end
-
-      current_class = current_class.superclass
-    end
-
-    best_pb = partial_blocks.select { |pb| pb.matches(*args) }
-                             .sort_by { |pb| pb.afinity(*args) }
-                             .first
-    return best_pb.block if best_pb
-    raise NoMultiMethodError.new
   end
 
 end

@@ -15,6 +15,7 @@ class PartialBlock
     true
   end
 
+=begin
   def matches_classes(*args)
     return false unless args.count == types_array.count
     types_array.each_with_index do |type, index|
@@ -22,6 +23,7 @@ class PartialBlock
     end
     true
   end
+=end
 
   def call(*args)
     raise ArgumentError.new unless matches(*args)
@@ -33,7 +35,6 @@ class PartialBlock
   end
 
   def afinity(*args)
-    raise ArgumentError.new unless matches(*args)
     afinity = 0
     args.each_with_index do |arg, index|
       afinity += arg.class.ancestors.index(types_array[index]) * (index + 1)

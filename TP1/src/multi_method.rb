@@ -22,9 +22,11 @@ class MultiMethod
     @partial_blocks.any? { |pb| pb.matches(*args) }
   end
 
+=begin
   def matches_classes(*args)
-    @partial_blocks.any? { |pb| pb.matches_classes(*args) }
+    @partial_blocks.any? { |pb| pb.matches_classes(*args)}
   end
+=end
 
   def block_for(types_array)
     @partial_blocks.find { |pb| pb.types_array == types_array }
@@ -50,7 +52,7 @@ class Object
 
   def self.partial_def(input_name, input_array, &input_block)
     add_multimethod(input_name, input_array, &input_block)
-# TODO - ADD THIS LINE -DELETE THE REPETEAD BLOCK BELOW OF IT
+# TODO - ADD THIS LINE -DELETE THE REPEATED BLOCK BELOW OF IT
 #    define_multimethod(input_name, self.class)
     define_method(input_name) { |*args|
       list_partialBlock = getParcialBlocks(input_name, self.class)
@@ -123,7 +125,7 @@ class Object
   end
 
   def self.base
-    Base.new(instance_eval("self"))
+    Base.new(self)
   end
 
   def self.multimethods
@@ -160,7 +162,7 @@ class Object
   def respond_to?(method_name, private = false, types_array = nil)
     return old_respond_to?(method_name, private) unless types_array
     mm = self.class.multimethod(method_name, false)
-    mm ? mm.matches_classes(*types_array) : false
+    mm ? mm.matches(*types_array) : false
   end
 
 end

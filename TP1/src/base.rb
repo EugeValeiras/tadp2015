@@ -11,7 +11,7 @@ class Base
     current_class = @object.class
     while (current_class)
       multimethod = current_class.multimethod(method_name)
-      partial_block = multimethod.block_for(types_array)
+      partial_block = multimethod.exact_partial_block_for_types(types_array)
       break if partial_block
       current_class = current_class.superclass
     end

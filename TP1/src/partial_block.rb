@@ -8,14 +8,10 @@ class PartialBlock
   end
 
   def matches(*args)
-    return false unless args.count == types_array.count
-    types_array.each_with_index do |type, index|
-      return false unless args[index].is_a?(type)
-    end
-    true
+    args = args.map { |arg| arg.class }
+    matches_classes(*args)
   end
 
-=begin
   def matches_classes(*args)
     return false unless args.count == types_array.count
     types_array.each_with_index do |type, index|
@@ -23,7 +19,6 @@ class PartialBlock
     end
     true
   end
-=end
 
   def call(*args)
     raise ArgumentError.new unless matches(*args)

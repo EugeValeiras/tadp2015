@@ -52,6 +52,10 @@ class MultiMethod
         end
       end
 
+      # (codigo + logica repetida muchas veces)
+      # si sube por "superclass" no va a encontrar a los modulos
+      # ej: String.superclass = Object
+      # String.ancestors = [String, Comparable, Object,...
       current_class = current_class.superclass
     end
     return partial_blocks if partial_blocks
@@ -74,7 +78,6 @@ class Object
     else
       @multimethods.push(MultiMethod.new(input_name, partial_block))
     end
-
   end
 
   def self.partial_def(input_name, input_array, &input_block)
@@ -108,6 +111,9 @@ class Object
       current_class_multimethods = current_class.instance_variable_get('@multimethods') || []
       multimethods.concat(current_class_multimethods.map { |mm| mm.name })
 
+      # si sube por "superclass" no va a encontrar a los modulos
+      # ej: String.superclass = Object
+      # String.ancestors = [String, Comparable, Object,...
       current_class = current_class.superclass
     end
 
@@ -124,6 +130,10 @@ class Object
       current_multimethod = current_multimethods.find { |mm| mm.name == name }
       return current_multimethod unless current_multimethod.nil?
 
+      # (codigo repetido con "multimethods")
+      # si sube por "superclass" no va a encontrar a los modulos
+      # ej: String.superclass = Object
+      # String.ancestors = [String, Comparable, Object,...
       current_class = with_superclass && current_class.superclass
     end
   end

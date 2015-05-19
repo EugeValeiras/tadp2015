@@ -37,4 +37,14 @@ describe 'Implementacion partial_block' do
     expect(pi.call()).to eq 3.14159265359
     expect(pi.matches()).to be true
   end
+
+  it 'falla con distina cantidad de parametros' do
+    partial = PartialBlock.new [Kernel, Comparable] { |a, b|
+      a.to_s + b.to_s
+    }
+    expect(partial.call("a", 2)).to eq("a2")
+    expect(partial.matches("a",3,4)).to be false
+    expect{ partial.call("a",2,3) }.to raise_error ArgumentError
+  end
+
 end
